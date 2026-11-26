@@ -1,5 +1,7 @@
 # 构建控制台（Cloudflare Pages 全栈版）
 
+> ✅ **唯一权威源码**：`https://github.com/websitebuildtest01/tv-build-console`（`main` 分支）。本机版 `build-page/local/` 已停止维护，后续改动一律改此仓库并推送，由 GitHub Actions 自动部署。
+
 公网可访问的构建控制台：静态页面 + Pages Functions 后端部署在同一个 Cloudflare Pages 项目，支持 websitebuildtest01 下的 4 个站点（含控制台自身）。
 
 ## 支持的站点
