@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>构建控制台 · websitebuildtest01</title>
+  <style>
+    :root {
+      --bg: #f6f8fb; --card: #fff; --border: #e3e8ef; --text: #1f2937; --muted: #6b7280;
+      --primary: #2563eb; --primary-hover: #1d4ed8; --success: #059669; --error: #dc2626;
+      --shadow: 0 1px 3px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.05);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 44px 20px 64px; }
+    header { margin-bottom: 26px; }
+    h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 24px; margin-bottom: 18px; }
+    .sites { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .site {
+      border: 2px solid var(--border); border-radius: 12px; padding: 16px;
+      cursor: pointer; transition: border-color .15s, background .15s; background: #fff;
+    }
+    .site:hover { border-color: #93c5fd; }
+    .site.active { border-color: var(--primary); background: #eff6ff; }
+    .site .name { font-size: 15px; font-weight: 700; }
+    .site .repo { font-size: 12px; color: var(--muted); margin-top: 4px; word-break: break-all; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, transform .05s, opacity .15s; }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-sm { padding: 6px 14px; font-size: 12px; background: #f3f4f6; color: var(--text); }
+    .btn-sm:hover { background: #e5e7eb; }
+    .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .status { margin-top: 16px; padding: 14px 16px; border-radius: 10px; font-size: 14px; display: none; white-space: pre-wrap; word-break: break-word; }
+    .status.show { display: block; }
+    .status.ok { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
+    .status.err { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+    .status.info { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; }
+    .runs { margin-top: 6px; }
+    .run { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .run:last-child { border-bottom: 0; }
+    .run .main { flex: 1; min-width: 0; }
+    .run .title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .run .meta { font-size: 12px; color: var(--muted); }
+    .badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+    .badge.success { background: #d1fae5; color: var(--success); }
+    .badge.failure { background: #fee2e2; color: var(--error); }
+    .badge.running, .badge.queued, .badge.in_progress { background: #dbeafe; color: var(--primary); }
+    .badge.neutral { background: #f3f4f6; color: var(--muted); }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .hint { font-size: 12px; color: var(--muted); }
+    .divider { height: 1px; background: var(--border); margin: 18px 0; }
+    .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 28px; }
+    .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    @media (max-width: 620px) { .sites { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>构建控制台</h1>
+      <p class="sub">websitebuildtest01 · 云端版（Cloudflare Pages）</p>
+    </header>
+
+    <section class="card">
+      <label for="accessKey" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">访问密钥</label>
+      <div class="row">
+        <input id="accessKey" type="password" placeholder="输入访问密钥后重试" style="flex:1;min-width:200px" />
+        <button id="saveKeyBtn" class="btn btn-sm">保存</button>
+      </div>
+      <div class="hint" style="margin-top:6px">密钥只保存在此浏览器，随每次请求发送给服务端校验。</div>
+    </section>
+
+    <section class="card">
+      <h2 style="font-size:15px;margin:0 0 12px">选择站点</h2>
+      <div id="sites" class="sites"></div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <button id="buildBtn" class="btn btn-primary">触发构建</button>
+        <span id="target" class="hint"></span>
+      </div>
+      <div id="status" class="status"></div>
+      <div class="divider"></div>
+      <div class="row">
+        <span class="hint">线上站点：</span>
+        <a id="siteLink" href="#" target="_blank" rel="noopener">—</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <h2 style="font-size:16px;margin:0">最近运行</h2>
+        <button id="refreshBtn" class="btn btn-sm">刷新</button>
+      </div>
+      <div id="runs" class="runs"><div class="hint">加载中…</div></div>
+    </section>
+
+    <div class="footer">Cloudflare Pages · 凭证存于服务端 Secret · 访问密钥校验后可用</div>
+  </div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const LABEL = { success: '成功', failure: '失败', cancelled: '已取消', skipped: '跳过', queued: '排队中', in_progress: '运行中', completed: '已完成', waiting: '等待中', requested: '已请求' };
+  let sites = [], selected = localStorage.getItem('tv_selected') || '';
+
+  function showStatus(type, text) {
+    const el = $('status');
+    el.className = 'status show ' + type;
+    el.textContent = text;
+  }
+  function current() { return sites.find(s => s.key === selected) || sites[0]; }
+  function fmtTime(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? s : d.toLocaleString('zh-CN', { hour12: false });
+  }
+  async function api(path, options) {
+    options = options || {};
+    options.headers = Object.assign({}, options.headers, {
+      'X-Access-Key': localStorage.getItem('tv_access_key') || ''
+    });
+    const res = await fetch(path, options);
+    const data = await res.json();
+    if (!res.ok || data.ok === false) throw new Error(data.message || ('HTTP ' + res.status));
+    return data;
+  }
+  function renderSites() {
+    $('sites').innerHTML = sites.map(s => `
+      <div class="site ${s.key === selected ? 'active' : ''}" data-key="${s.key}">
+        <div class="name">${s.name}</div>
+        <div class="repo">${s.repo}</div>
+      </div>`).join('');
+    document.querySelectorAll('.site').forEach(el => {
+      el.onclick = () => {
+        selected = el.dataset.key;
+        localStorage.setItem('tv_selected', selected);
+        renderSites();
+        updateTarget();
+        loadRuns();
+      };
+    });
+  }
+  function updateTarget() {
+    const s = current();
+    if (!s) return;
+    $('target').textContent = `${s.repo} · build.yml · main`;
+    $('siteLink').textContent = s.site;
+    $('siteLink').href = s.site;
+  }
+  async function loadRuns() {
+    const s = current();
+    if (!s) return;
+    $('runs').innerHTML = '<div class="hint">加载中…</div>';
+    try {
+      const d = await api('/api/runs/' + s.key);
+      const runs = d.runs || [];
+      if (!runs.length) { $('runs').innerHTML = '<div class="hint">暂无运行记录</div>'; return; }
+      $('runs').innerHTML = runs.map(r => {
+        const cls = (r.status === 'completed' ? r.conclusion : r.status) || 'neutral';
+        const label = LABEL[cls] || cls;
+        return `<div class="run">
+          <span class="badge ${cls}">${label}</span>
+          <div class="main">
+            <div class="title">#${r.run_number} · ${r.display_title || '手动构建'}</div>
+            <div class="meta">${fmtTime(r.created_at)}</div>
+          </div>
+          <a href="${r.html_url}" target="_blank" rel="noopener">查看 ↗</a>
+        </div>`;
+      }).join('');
+    } catch (e) {
+      $('runs').innerHTML = '<div class="hint">加载失败：' + e.message + '</div>';
+    }
+  }
+  $('buildBtn').onclick = async () => {
+    const s = current();
+    if (!s) return;
+    const btn = $('buildBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> 触发中…';
+    showStatus('info', `正在触发 ${s.name} 的构建…`);
+    try {
+      await api('/api/trigger/' + s.key, { method: 'POST' });
+      showStatus('ok', `${s.name} 构建已触发 ✓\n可到下方「最近运行」查看进度，完成后自动部署到：\n${s.site}`);
+      setTimeout(loadRuns, 1500);
+    } catch (e) {
+      showStatus('err', '触发失败：' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '触发构建';
+    }
+  };
+  $('refreshBtn').onclick = loadRuns;
+  $('saveKeyBtn').onclick = () => {
+    localStorage.setItem('tv_access_key', $('accessKey').value.trim());
+    showStatus('ok', '访问密钥已保存，正在重新加载…');
+    boot();
+  };
+  if (localStorage.getItem('tv_access_key')) $('accessKey').value = localStorage.getItem('tv_access_key');
+
+  async function boot() {
+    try {
+      const c = await api('/api/config');
+      sites = c.sites;
+      if (!selected || !sites.find(s => s.key === selected)) selected = c.default;
+      renderSites();
+      updateTarget();
+      loadRuns();
+    } catch (e) {
+      showStatus('err', '加载失败：' + e.message + (e.message.indexOf('密钥') >= 0 ? '，请在上方输入访问密钥。' : ''));
+    }
+  }
+  boot();
+  setInterval(loadRuns, 30000);
+})();
+</script>
+</body>
+</html>

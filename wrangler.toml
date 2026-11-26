@@ -1,0 +1,9 @@
+name = "tv-build-console"
+compatibility_date = "2026-11-26"
+pages_build_output_dir = "."
+
+# 以下 secret 通过 wrangler secret put 上传（不落盘）：
+#   GITHUB_TOKEN  — 复用本机 gh auth token
+#   ACCESS_KEY    — 页面访问密钥
+# 可选 env var（wrangler secret put 或 dashboard 设置）：
+#   ALLOWED_ORIGINS
