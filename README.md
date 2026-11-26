@@ -1,6 +1,15 @@
 # 构建控制台（Cloudflare Pages 全栈版）
 
-公网可访问的构建控制台：静态页面 + Pages Functions 后端部署在同一个 Cloudflare Pages 项目，支持 websitebuildtest01 下的 3 个站点。
+公网可访问的构建控制台：静态页面 + Pages Functions 后端部署在同一个 Cloudflare Pages 项目，支持 websitebuildtest01 下的 4 个站点（含控制台自身）。
+
+## 支持的站点
+
+| 站点 | 仓库 | 线上地址 |
+|---|---|---|
+| Titanium Valleys | `websitebuildtest01/titanium-valleys-demo` | https://titanium-valleys-demo.pages.dev |
+| Plant Extract | `websitebuildtest01/plantextract-demo` | https://plantextract-demo.pages.dev |
+| Furniture | `websitebuildtest01/furniture-demo` | https://furniture-demo-dq4.pages.dev |
+| TV Build Console | `websitebuildtest01/tv-build-console` | https://tv-build-console.pages.dev |
 
 ## 访问地址
 
@@ -35,7 +44,17 @@ cloud/
     api/runs/[key].js             GET  /api/runs/:key
 ```
 
-## 部署/更新流程
+## 部署/更新流程（推荐：自动部署）
+
+源码仓库 `websitebuildtest01/tv-build-console` 已配置 `.github/workflows/build.yml`：
+
+- 向 `main` 分支 push 代码 → GitHub Actions 自动部署到 Cloudflare Pages
+- 也可在 Actions 页面手动 Run workflow（`workflow_dispatch`）
+- 凭证存仓库 Secrets：`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`，不在代码中
+
+这样绕开了 Cloudflare Pages Git 集成报错 `8000011` 的问题（Direct Upload 项目仍可正常由 Actions 部署）。
+
+本机手动部署（备用）：
 
 ```bash
 cd build-page/cloud
@@ -52,9 +71,10 @@ printf '%s' '<访问密钥>' | npx wrangler@3.90.0 pages secret put ACCESS_KEY
 
 ## 已验证
 
-- 首页 HTTP 200；无密钥访问 `/api/config` 返回 401；带密钥正常返回 3 站点配置。
+- 首页 HTTP 200；无密钥访问 `/api/config` 返回 401；带密钥返回 4 站点配置。
 - 通过云端 API 触发 `plantextract-demo` 构建 → 运行 #3 `success` → 站点部署成功。
-- 三个目标站点均可公开访问（见上级 `local/README.md`）。
+- 向仓库 push 自动触发 `build.yml` → Cloudflare Pages 部署成功（`success`），线上页面更新。
+- 四个目标站点均可公开访问（三个网站见上级 `local/README.md`）。
 
 ## 说明
 

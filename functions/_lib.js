@@ -7,7 +7,8 @@ export const REF = 'main';
 export const SITES = [
   { key: 'titanium', name: 'Titanium Valleys', repo: 'titanium-valleys-demo', site: 'https://titanium-valleys-demo.pages.dev' },
   { key: 'plantextract', name: 'Plant Extract', repo: 'plantextract-demo', site: 'https://plantextract-demo.pages.dev' },
-  { key: 'furniture', name: 'Furniture', repo: 'furniture-demo', site: 'https://furniture-demo-dq4.pages.dev' }
+  { key: 'furniture', name: 'Furniture', repo: 'furniture-demo', site: 'https://furniture-demo-dq4.pages.dev' },
+  { key: 'tv-build-console', name: 'TV Build Console', repo: 'tv-build-console', site: 'https://tv-build-console.pages.dev' }
 ];
 
 export function findSite(key) {
